@@ -1,6 +1,8 @@
 const robot = require('@hurdlegroup/robotjs');
 const { exec } = require('child_process');
 
+// https://github.com/hurdlegroup/robotjs?tab=readme-ov-file#installation
+
 // Función para hacer una pausa
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
