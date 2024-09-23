@@ -1,0 +1,26 @@
+% Reglas que dan las coordenadas de las posiciones con alta probabilidad de tener un objetivo
+coordenadas('A1').
+coordenadas('A2').
+coordenadas('A6').
+coordenadas('A7').
+coordenadas('A9').
+coordenadas('C1').
+coordenadas('C3').
+coordenadas('C5').
+coordenadas('C7').
+coordenadas('C9').
+coordenadas('E1').
+coordenadas('E3').
+coordenadas('E5').
+coordenadas('E7').
+coordenadas('E9').
+coordenadas('G1').
+coordenadas('G3').
+coordenadas('G5').
+coordenadas('G7').
+coordenadas('G9').
+coordenadas('I1').
+coordenadas('I3').
+coordenadas('I5').
+coordenadas('I7').
+coordenadas('I9').

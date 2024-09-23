@@ -10,6 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@hurdlegroup/robotjs": "^0.12.2"
+    "@hurdlegroup/robotjs": "^0.12.2",
+    "node-notifier": "^10.0.1"
   }
 }
