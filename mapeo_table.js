@@ -7,15 +7,11 @@ require('tau-prolog/modules/js');
 let session = pl.create();
 let coordenadas = [];
 let posicionesMap = {};
+let posicionesResetMap = {};
 const prologFilePath = './coordenadas.pl';
 const posicionesFilePath = './posiciones.txt';
+const posicionesresetFilePath = './reset_posiciones.txt';
 let posicionesDisparadas = [];
-let barcosDisponibles = {
-    1: 4, // 4 barcos de 1 celda
-    2: 3, // 3 barcos de 2 celdas
-    3: 2, // 2 barcos de 3 celdas
-    4: 1  // 1 barco de 4 celdas
-};
 let is_target = false;
 
 const startX = 685;
@@ -26,8 +22,8 @@ const threshouldStartOpponent = 37;
 const thresholdYourTurn = 11;
 const thresholdOpponentTurn = 30;
 
-let contadorBarco = 0; // Nuevo contador para el tamaño del barco
-let pendientesAdyacentes = []; // Pila para almacenar las adyacentes pendientes
+let contadorBarco = 0;
+let pendientesAdyacentes = [];
 
 function cargarPosiciones() {
     fs.readFile(posicionesFilePath, 'utf8', (err, data) => {
@@ -43,6 +39,27 @@ function cargarPosiciones() {
                 const x = parseInt(match[2], 10);
                 const y = parseInt(match[3], 10);
                 posicionesMap[nombre] = { x, y };
+            }
+        });
+        console.log("Posiciones cargadas:", posicionesMap);
+        cargarPosicionesReset();
+    });
+}
+
+function cargarPosicionesReset() {
+    fs.readFile(posicionesresetFilePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error("Error al leer el archivo de posiciones:", err);
+            return;
+        }
+        const lineas = data.split('\n');
+        lineas.forEach(linea => {
+            const match = linea.match(/([A-Z]\d+)\s+\(X:\s*(\d+),\s*Y:\s*(\d+)\)/);
+            if (match) {
+                const nombre = match[1];
+                const x = parseInt(match[2], 10);
+                const y = parseInt(match[3], 10);
+                posicionesResetMap[nombre] = { x, y };
             }
         });
         console.log("Posiciones cargadas:", posicionesMap);
@@ -216,13 +233,13 @@ function dispararACeldasAdyacentesPendientes() {
                 is_target = true;
             }
         }, 2000);
-    } else if (color === 'f2f4f8' || color === 'fafad6' || color === 'fef5f4' || color === 'c0c0c0') {
+    } else if (color === 'f2f4f8' || color === 'fafad6' || color === 'fef5f4' || color === 'c0c0c0' || color === 'ea3323') {
         console.log(`Celda ${celda.nombre} no es disparable (fallo o ya disparada).`);
         dispararACeldasAdyacentesPendientes();
     }
 }
 
-// Modificar dispararSiguienteCoordenada para siempre verificar las adyacentes pendientes primero
+// Funcioón para dispararSiguienteCoordenada para siempre verificar las adyacentes pendientes primero
 function dispararSiguienteCoordenada() {
     if (pendientesAdyacentes.length > 0) {
         dispararACeldasAdyacentesPendientes();
