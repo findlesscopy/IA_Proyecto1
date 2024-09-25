@@ -26,6 +26,7 @@ const threshouldStartOpponent = 37;
 const thresholdYourTurn = 11;
 const thresholdOpponentTurn = 30;
 
+let contadorBarco = 0; // Nuevo contador para el tamaño del barco
 let pendientesAdyacentes = []; // Pila para almacenar las adyacentes pendientes
 
 function cargarPosiciones() {
@@ -162,10 +163,15 @@ function obtenerCeldasAdyacentes(posicion) {
     return celdasAdyacentes;
 }
 
-// Función modificada para manejar las adyacentes pendientes
+// Función modificada para manejar las adyacentes y contar el tamaño del barco
 function manejarObjetivo() {
     let ultimaPosicionDisparada = posicionesDisparadas[posicionesDisparadas.length - 1];
-    
+
+    if (contadorBarco === 0 && ultimaPosicionDisparada) {
+        // Comienza el conteo del barco con la primera posición acertada
+        contadorBarco = 1;
+    }
+
     // Si no hay adyacentes pendientes, obtenemos nuevas
     if (pendientesAdyacentes.length === 0 && ultimaPosicionDisparada) {
         pendientesAdyacentes = obtenerCeldasAdyacentes(ultimaPosicionDisparada);
@@ -183,10 +189,12 @@ function obtenerColorDeCelda(x, y) {
     return color;
 }
 
+// Modificada para actualizar el contador del barco
 function dispararACeldasAdyacentesPendientes() {
     if (pendientesAdyacentes.length === 0) {
-        console.log("No hay más adyacentes pendientes, disparando siguiente coordenada.");
-        is_target = false; // Ya no hay adyacentes, vuelve a disparar del haunting
+        console.log(`Barco detectado de tamaño: ${contadorBarco}`);
+        is_target = false;
+        contadorBarco = 0; // Reiniciar el contador para el próximo barco
         dispararSiguienteCoordenada();
         return;
     }
@@ -198,28 +206,28 @@ function dispararACeldasAdyacentesPendientes() {
         console.log(`Disparando a la celda adyacente: ${celda.nombre}`);
         moverYClick(celda);
 
-        // Si disparas y aciertas (sigue en ataque), sigue con adyacentes
+        // Si aciertas, incrementa el contador del barco
         setTimeout(() => {
             if (detectarMensaje() === "Ataque") {
-                manejarObjetivo();
+                contadorBarco++; // Incrementar el tamaño del barco
+                manejarObjetivo(); // Continuar buscando adyacentes
             } else {
                 console.log("Turno del oponente. Guardando celdas pendientes.");
-                // Guardamos las celdas restantes para cuando vuelva el turno
                 is_target = true;
             }
         }, 2000);
-    } else if (color === 'f2f4f8' || color === 'fafad6' || color === 'fef5f4') {
+    } else if (color === 'f2f4f8' || color === 'fafad6' || color === 'fef5f4' || color === 'c0c0c0') {
         console.log(`Celda ${celda.nombre} no es disparable (fallo o ya disparada).`);
         dispararACeldasAdyacentesPendientes();
     }
 }
 
-// Modifica la función dispararSiguienteCoordenada para que verifique primero las adyacentes pendientes
+// Modificar dispararSiguienteCoordenada para siempre verificar las adyacentes pendientes primero
 function dispararSiguienteCoordenada() {
     if (pendientesAdyacentes.length > 0) {
         dispararACeldasAdyacentesPendientes();
     } else {
-        let siguientePosicion = coordenadas.find(c => 
+        let siguientePosicion = coordenadas.find(c =>
             !posicionesDisparadas.some(p => p.x === c.x && p.y === c.y)
         );
 
