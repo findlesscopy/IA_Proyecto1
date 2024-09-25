@@ -26,6 +26,8 @@ const threshouldStartOpponent = 37;
 const thresholdYourTurn = 11;
 const thresholdOpponentTurn = 30;
 
+let pendientesAdyacentes = []; // Pila para almacenar las adyacentes pendientes
+
 function cargarPosiciones() {
     fs.readFile(posicionesFilePath, 'utf8', (err, data) => {
         if (err) {
@@ -160,41 +162,17 @@ function obtenerCeldasAdyacentes(posicion) {
     return celdasAdyacentes;
 }
 
-// Función para actualizar los barcos disponibles
-function actualizarContadorBarcos(tamano) {
-    if (barcosDisponibles[tamano] > 0) {
-        barcosDisponibles[tamano]--;
-        console.log(`Barco de tamaño ${tamano} destruido. Barcos restantes:, barcosDisponibles`);
-        // Crea el mensaje para la notificación
-        const mensajeNotificacion = `Barco de tamaño ${tamano} destruido. Barcos restantes: ${JSON.stringify(barcosDisponibles)}`;
-
-        notifier.notify({ title: 'Notificación', message: mensajeNotificacion, sound: true });
-    }
-}
-
+// Función modificada para manejar las adyacentes pendientes
 function manejarObjetivo() {
-    const ultimaPosicionDisparada = posicionesDisparadas[posicionesDisparadas.length - 1];
-    if (ultimaPosicionDisparada) {
-        const celdasAdyacentes = obtenerCeldasAdyacentes(ultimaPosicionDisparada);
-        const disparoExitoso = dispararACeldasAdyacentes(celdasAdyacentes);
-
-        // Contar cuántas celdas adyacentes se pueden disparar
-        const adyacentesDisparables = celdasAdyacentes.filter(celda => obtenerColorDeCelda(celda.x, celda.y) === 'ffffff');
-
-        if (adyacentesDisparables.length === 0) {
-            // Si no se disparó a ninguna celda adyacente, se identifica un barco de 1 celda
-            console.log("Identificado barco de 1 celda.");
-            actualizarContadorBarcos(1);
-            dispararSiguienteCoordenada();
-        } else {
-            // Si hay adyacentes disparables, entonces es un barco más grande
-            console.log("Identificado barco de mayor tamaño.");
-            // Aquí puedes agregar lógica para identificar si es un barco de 2, 3 o 4 celdas.
-            // Esto depende de cuántas adyacentes disparables encuentres.
-            // Por simplicidad, aquí se asume que hay un barco de al menos 2 celdas.
-            actualizarContadorBarcos(2); // Esto es un ejemplo, ajusta según tu lógica
-        }
+    let ultimaPosicionDisparada = posicionesDisparadas[posicionesDisparadas.length - 1];
+    
+    // Si no hay adyacentes pendientes, obtenemos nuevas
+    if (pendientesAdyacentes.length === 0 && ultimaPosicionDisparada) {
+        pendientesAdyacentes = obtenerCeldasAdyacentes(ultimaPosicionDisparada);
     }
+
+    // Continuar disparando a las celdas adyacentes pendientes
+    dispararACeldasAdyacentesPendientes();
 }
 
 // Función para obtener el color de una celda
@@ -205,33 +183,51 @@ function obtenerColorDeCelda(x, y) {
     return color;
 }
 
-// Modifica la función dispararACeldasAdyacentes para que retorne un booleano
-function dispararACeldasAdyacentes(celdas) {
-    for (const celda of celdas) {
-        const color = obtenerColorDeCelda(celda.x, celda.y);
-        if (color === 'ffffff' || color === 'f7fcf6') {
-            console.log(`Disparando a la celda: ${celda.nombre}`);
-            moverYClick(celda);
-            return true; // Indica que se disparó exitosamente
-        } else if (color === 'f2f4f8') {
-            console.log(`Celda ${celda.nombre} ya fue disparada.`);
-        } else {
-            console.log(`Celda ${celda.nombre} no es disparable.`);
-        }
+function dispararACeldasAdyacentesPendientes() {
+    if (pendientesAdyacentes.length === 0) {
+        console.log("No hay más adyacentes pendientes, disparando siguiente coordenada.");
+        is_target = false; // Ya no hay adyacentes, vuelve a disparar del haunting
+        dispararSiguienteCoordenada();
+        return;
     }
-    console.log("Todas las celdas adyacentes ya han sido disparadas o no son válidas.");
-    return false; // Indica que no se disparó a ninguna celda
+
+    let celda = pendientesAdyacentes.shift(); // Tomar la siguiente celda pendiente
+    const color = obtenerColorDeCelda(celda.x, celda.y);
+
+    if (color === 'ffffff' || color === 'f7fcf6') {
+        console.log(`Disparando a la celda adyacente: ${celda.nombre}`);
+        moverYClick(celda);
+
+        // Si disparas y aciertas (sigue en ataque), sigue con adyacentes
+        setTimeout(() => {
+            if (detectarMensaje() === "Ataque") {
+                manejarObjetivo();
+            } else {
+                console.log("Turno del oponente. Guardando celdas pendientes.");
+                // Guardamos las celdas restantes para cuando vuelva el turno
+                is_target = true;
+            }
+        }, 2000);
+    } else if (color === 'f2f4f8' || color === 'fafad6' || color === 'fef5f4') {
+        console.log(`Celda ${celda.nombre} no es disparable (fallo o ya disparada).`);
+        dispararACeldasAdyacentesPendientes();
+    }
 }
 
+// Modifica la función dispararSiguienteCoordenada para que verifique primero las adyacentes pendientes
 function dispararSiguienteCoordenada() {
-    let siguientePosicion = coordenadas.find(c => 
-        !posicionesDisparadas.some(p => p.x === c.x && p.y === c.y)
-    );
-
-    if (siguientePosicion) {
-        moverYClick(siguientePosicion);
+    if (pendientesAdyacentes.length > 0) {
+        dispararACeldasAdyacentesPendientes();
     } else {
-        console.log("Ya se disparó a todas las coordenadas disponibles.");
+        let siguientePosicion = coordenadas.find(c => 
+            !posicionesDisparadas.some(p => p.x === c.x && p.y === c.y)
+        );
+
+        if (siguientePosicion) {
+            moverYClick(siguientePosicion);
+        } else {
+            console.log("Ya se disparó a todas las coordenadas disponibles.");
+        }
     }
 }
 
@@ -274,6 +270,9 @@ function detectarMensaje() {
             process.exit(0);
         }
     }
+
+    console.log(`Pixeles del mensaje: ${sameColorPixels}`);
+    
 
     let estado = "No message detected";
 
