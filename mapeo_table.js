@@ -7,12 +7,15 @@ require('tau-prolog/modules/js');
 let session = pl.create();
 let coordenadas = [];
 let posicionesMap = {};
-let posicionesResetMap = {};
+const posicionesReset = {};
 const prologFilePath = './coordenadas.pl';
 const posicionesFilePath = './posiciones.txt';
 const posicionesresetFilePath = './reset_posiciones.txt';
 let posicionesDisparadas = [];
 let is_target = false;
+
+let contadorBarco = 0;
+let pendientesAdyacentes = [];
 
 const startX = 685;
 const posY = 92;
@@ -22,10 +25,6 @@ const threshouldStartOpponent = 37;
 const thresholdYourTurn = 11;
 const thresholdOpponentTurn = 30;
 
-let contadorBarco = 0;
-let pendientesAdyacentes = [];
-
-const posicionesReset = {};
 const barcosClasificados = {
     unoCelda: [],
     dosCeldas: [],
@@ -74,7 +73,7 @@ function cargarPosiciones() {
                 posicionesMap[nombre] = { x, y };
             }
         });
-        console.log("Posiciones cargadas:", posicionesMap);
+        // console.log("Posiciones cargadas:", posicionesMap);
         ColocarBarcosFinal();
     });
 }
@@ -96,7 +95,7 @@ function cargarPosicionesReset() {
                 posicionesReset[nombre] = { x, y };
             }
         });
-        console.log("Posiciones cargadas:", posicionesReset);
+        // console.log("Posiciones cargadas:", posicionesReset);
         colocarBarcos(); // Inicia la colocación de barcos
     });
 }
@@ -134,6 +133,7 @@ async function moverBarco(origen, destino, orientacion) {
 
 // Función para colocar todos los barcos siguiendo el flujo
 async function colocarBarcos() {
+
     // Coordenadas iniciales de los barcos
     const posicionesIniciales = {
         barco4: { x: 420, y: 255 },
@@ -185,7 +185,7 @@ function darleStart () {
         robot.mouseClick();
     }, 2000);
 
-    // Empieza la logic del juego
+    // Empieza la logica del juego
     empezandoJuego();
 
 }
@@ -212,7 +212,8 @@ function procesarResultadosBarcos(predicado, callback) {
     session.answer({
         success: function(answer) {
             let result = pl.format_answer(answer);
-            console.log("Respuesta:", result);
+            
+            // console.log("Respuesta:", result);
 
             // Usar regex para extraer los valores
             let match = result.match(/X = (\w+), Orientacion = (\w+)/);
@@ -293,12 +294,12 @@ function clasificarBarcos() {
         }
     });
 
-    // Imprimir los barcos clasificados
-    console.log("Barcos clasificados por tipo:");
-    console.log("Barcos de una celda:", barcosClasificados.unoCelda);
-    console.log("Barcos de dos celdas:", barcosClasificados.dosCeldas);
-    console.log("Barcos de tres celdas:", barcosClasificados.tresCeldas);
-    console.log("Barcos de cuatro celdas:", barcosClasificados.cuatroCeldas);
+    // // Imprimir los barcos clasificados
+    // console.log("Barcos clasificados por tipo:");
+    // console.log("Barcos de una celda:", barcosClasificados.unoCelda);
+    // console.log("Barcos de dos celdas:", barcosClasificados.dosCeldas);
+    // console.log("Barcos de tres celdas:", barcosClasificados.tresCeldas);
+    // console.log("Barcos de cuatro celdas:", barcosClasificados.cuatroCeldas);
 }
 
 function empezandoJuego () {
@@ -402,7 +403,7 @@ function obtenerCeldasAdyacentes(posicion) {
     return celdasAdyacentes;
 }
 
-// Función modificada para manejar las adyacentes y contar el tamaño del barco
+// Función para manejar las adyacentes y contar el tamaño del barco
 function manejarObjetivo() {
     let ultimaPosicionDisparada = posicionesDisparadas[posicionesDisparadas.length - 1];
 
@@ -428,7 +429,7 @@ function obtenerColorDeCelda(x, y) {
     return color;
 }
 
-// Modificada para actualizar el contador del barco
+// Función para actualizar el contador del barco
 function dispararACeldasAdyacentesPendientes() {
     if (pendientesAdyacentes.length === 0) {
         console.log(`Barco detectado de tamaño: ${contadorBarco}`);
