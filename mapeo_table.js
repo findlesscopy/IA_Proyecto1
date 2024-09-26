@@ -25,6 +25,39 @@ const thresholdOpponentTurn = 30;
 let contadorBarco = 0;
 let pendientesAdyacentes = [];
 
+const posicionesReset = {};
+const barcosClasificados = {
+    unoCelda: [],
+    dosCeldas: [],
+    tresCeldas: [],
+    cuatroCeldas: []
+};
+
+// Función principal async para colocar los barcos
+async function ColocarBarcosFinal() {
+    console.log("Iniciando ColocarBarcosFinal...");
+    
+    // Mueve el mouse a la posición del botón de reset
+    console.log("Esperando 3 segundos antes de mover el mouse...");
+    await esperarSegundos(3); 
+    robot.moveMouse(610, 590);
+    console.log("Mouse movido a la posición del botón de reset.");
+
+    // Hace clic para abrir la página
+    console.log("Esperando 1 segundo antes de hacer clic...");
+    await esperarSegundos(1); 
+    robot.mouseClick();
+    console.log("Clic realizado.");
+
+    // Cargar el archivo Prolog después de 2 segundos
+    console.log("Esperando 2 segundos antes de cargar el archivo Prolog...");
+    await esperarSegundos(2);
+    
+    cargarArchivoProlog();
+    
+    console.log("Archivo Prolog cargado y proceso iniciado.");
+}
+
 function cargarPosiciones() {
     fs.readFile(posicionesFilePath, 'utf8', (err, data) => {
         if (err) {
@@ -42,10 +75,11 @@ function cargarPosiciones() {
             }
         });
         console.log("Posiciones cargadas:", posicionesMap);
-        cargarPosicionesReset();
+        ColocarBarcosFinal();
     });
 }
 
+// Función para cargar posiciones desde archivo
 function cargarPosicionesReset() {
     fs.readFile(posicionesresetFilePath, 'utf8', (err, data) => {
         if (err) {
@@ -59,14 +93,104 @@ function cargarPosicionesReset() {
                 const nombre = match[1];
                 const x = parseInt(match[2], 10);
                 const y = parseInt(match[3], 10);
-                posicionesResetMap[nombre] = { x, y };
+                posicionesReset[nombre] = { x, y };
             }
         });
-        console.log("Posiciones cargadas:", posicionesMap);
-        cargarArchivoProlog();
+        console.log("Posiciones cargadas:", posicionesReset);
+        colocarBarcos(); // Inicia la colocación de barcos
     });
 }
 
+// Tiempo de espera entre acciones
+function esperarSegundos(segundos) {
+    return new Promise(resolve => setTimeout(resolve, segundos * 1000));
+}
+
+// Función para mover el mouse y arrastrar los barcos
+async function moverBarco(origen, destino, orientacion) {
+    const { x: origenX, y: origenY } = origen;
+    const { x: destinoX, y: destinoY } = destino;
+
+    // Mueve el mouse al origen del barco
+    robot.moveMouse(origenX, origenY);
+    await esperarSegundos(2);
+
+    // Presiona y arrastra hacia el destino
+    robot.mouseToggle("down");
+    await esperarSegundos(1);
+    robot.dragMouse(destinoX, destinoY);
+    robot.mouseToggle("up");
+    await esperarSegundos(1);
+
+    // Verificar orientación
+    if (orientacion === 'V') {
+        robot.moveMouse(destinoX, destinoY); // Mover el mouse para click de orientación
+        await esperarSegundos(1);
+        robot.mouseClick();  // Cambiar la orientación a vertical
+    }
+
+    await esperarSegundos(1);
+}
+
+// Función para colocar todos los barcos siguiendo el flujo
+async function colocarBarcos() {
+    // Coordenadas iniciales de los barcos
+    const posicionesIniciales = {
+        barco4: { x: 420, y: 255 },
+        barco3_1: { x: 420, y: 320 },
+        barco3_2: { x: 530, y: 320 },
+        barco2_1: { x: 420, y: 385 },
+        barco2_2: { x: 500, y: 385 },
+        barco2_3: { x: 580, y: 385 },
+        barco1_1: { x: 415, y: 450 },
+        barco1_2: { x: 465, y: 450 },
+        barco1_3: { x: 515, y: 450 },
+        barco1_4: { x: 565, y: 450 }
+    };
+
+    // Colocar el barco de 4 celdas
+    const destinoBarco4 = posicionesReset[barcosClasificados.cuatroCeldas[0].posicion]; // Obtener destino de 4 celdas
+    await moverBarco(posicionesIniciales.barco4, destinoBarco4, barcosClasificados.cuatroCeldas[0].orientacion);
+
+    // Colocar barcos de 3 celdas
+    for (let i = 0; i < barcosClasificados.tresCeldas.length; i++) {
+        const destinoBarco3 = posicionesReset[barcosClasificados.tresCeldas[i].posicion];
+        await moverBarco(posicionesIniciales[`barco3_${i+1}`], destinoBarco3, barcosClasificados.tresCeldas[i].orientacion);
+    }
+
+    // Colocar barcos de 2 celdas
+    for (let i = 0; i < barcosClasificados.dosCeldas.length; i++) {
+        const destinoBarco2 = posicionesReset[barcosClasificados.dosCeldas[i].posicion];
+        await moverBarco(posicionesIniciales[`barco2_${i+1}`], destinoBarco2, barcosClasificados.dosCeldas[i].orientacion);
+    }
+
+    // Colocar barcos de 1 celda
+    for (let i = 0; i < barcosClasificados.unoCelda.length; i++) {
+        const destinoBarco1 = posicionesReset[barcosClasificados.unoCelda[i].posicion];
+        await moverBarco(posicionesIniciales[`barco1_${i+1}`], destinoBarco1, barcosClasificados.unoCelda[i].orientacion);
+    }
+
+    console.log("Todos los barcos han sido colocados.");
+
+    darleStart();
+    
+}
+
+function darleStart () {
+    setTimeout(() => {
+        robot.moveMouse(980, 330);
+    }, 2000);
+
+    setTimeout(() => {
+        robot.mouseClick();
+    }, 2000);
+
+    // Empieza la logic del juego
+    empezandoJuego();
+
+}
+
+// Función para cargar el archivo Prolog
 function cargarArchivoProlog() {
     fs.readFile(prologFilePath, 'utf8', (err, data) => {
         if (err) {
@@ -76,11 +200,109 @@ function cargarArchivoProlog() {
         session.consult(data, {
             success: () => {
                 console.log("Archivo Prolog cargado.");
-                obtenerTodasCoordenadas();
+                obtenerCoordenadasBarcos(); // Llama a la función para obtener las coordenadas
             },
             error: (err) => console.error("Error al cargar Prolog:", err)
         });
     });
+}
+
+// Función para procesar los resultados de los barcos y almacenar en el mapa
+function procesarResultadosBarcos(predicado, callback) {
+    session.answer({
+        success: function(answer) {
+            let result = pl.format_answer(answer);
+            console.log("Respuesta:", result);
+
+            // Usar regex para extraer los valores
+            let match = result.match(/X = (\w+), Orientacion = (\w+)/);
+            if (match) {
+                let nombre = match[1];
+                let orientacion = match[2];
+
+                // Imprime las coordenadas y orientaciones de los barcos
+                console.log(`Barco: ${nombre}, Orientación: ${orientacion}`);
+
+                // Almacena en el mapa las posiciones de cada barco según su tipo
+                posicionesReset[nombre] = { orientacion: orientacion };
+
+                // Busca la siguiente respuesta
+                procesarResultadosBarcos(predicado, callback); // Llama de nuevo para obtener la siguiente respuesta
+            } else {
+                console.log(`No hay más respuestas para ${predicado}.`);
+                callback(); // Llama al callback para continuar
+            }
+        },
+        fail: function() {
+            console.log(`Error al obtener la respuesta para ${predicado}. Puede que no haya más.`);
+            callback(); // Llama al callback para continuar
+        }
+    });
+}
+
+// Función para obtener todas las coordenadas de los barcos
+function obtenerCoordenadasBarcos() {
+    let predicados = [
+        "barco_una_celda(X, Orientacion).",
+        "barco_dos_celdas(X, Orientacion).",
+        "barco_tres_celdas(X, Orientacion).",
+        "barco_cuatro_celdas(X, Orientacion)."
+    ];
+
+    let index = 0; // Índice para recorrer los predicados
+
+    function procesarSiguiente() {
+        if (index < predicados.length) {
+            session.query(predicados[index], {
+                success: () => {
+                    procesarResultadosBarcos(predicados[index], () => {
+                        index++; // Avanza al siguiente predicado
+                        procesarSiguiente(); // Llama a la siguiente consulta
+                    });
+                },
+                fail: () => {
+                    console.error(`Error al consultar ${predicados[index]} en Prolog.`);
+                    index++; // Avanza al siguiente predicado, aunque falle
+                    procesarSiguiente(); // Llama a la siguiente consulta
+                }
+            });
+        } else {
+            // Se han procesado todos los predicados
+            console.log("Coordenadas obtenidas:", posicionesReset);
+            clasificarBarcos(); // Clasifica los barcos
+            cargarPosicionesReset(); // Carga las posiciones de los barcos desde el archivo
+        }
+    }
+    // Iniciar el proceso
+    procesarSiguiente();
+}
+
+// Función para clasificar los barcos por su tipo
+function clasificarBarcos() {
+    // Clasificar los barcos según su posición
+    Object.keys(posicionesReset).forEach((posicion, index) => {
+        const barco = posicionesReset[posicion];
+        if (index < 4) {
+            barcosClasificados.unoCelda.push({ posicion, ...barco });
+        } else if (index < 7) {
+            barcosClasificados.dosCeldas.push({ posicion, ...barco });
+        } else if (index < 9) {
+            barcosClasificados.tresCeldas.push({ posicion, ...barco });
+        } else {
+            barcosClasificados.cuatroCeldas.push({ posicion, ...barco });
+        }
+    });
+
+    // Imprimir los barcos clasificados
+    console.log("Barcos clasificados por tipo:");
+    console.log("Barcos de una celda:", barcosClasificados.unoCelda);
+    console.log("Barcos de dos celdas:", barcosClasificados.dosCeldas);
+    console.log("Barcos de tres celdas:", barcosClasificados.tresCeldas);
+    console.log("Barcos de cuatro celdas:", barcosClasificados.cuatroCeldas);
+}
+
+function empezandoJuego () {
+    obtenerTodasCoordenadas();
 }
 
 function obtenerTodasCoordenadas() {
@@ -298,7 +520,6 @@ function detectarMensaje() {
 
     console.log(`Pixeles del mensaje: ${sameColorPixels}`);
     
-
     let estado = "No message detected";
 
     if (sameColorPixels == thresholdStarted || sameColorPixels == thresholdYourTurn) {

@@ -1,3 +1,21 @@
+% Barcos de una celda
+barco_una_celda('A1', 'H').
+barco_una_celda('B10', 'H').
+barco_una_celda('C2', 'H').
+barco_una_celda('J10', 'H').
+
+% Barcos de dos celdas
+barco_dos_celdas('E1', 'H').
+barco_dos_celdas('A8', 'H').
+barco_dos_celdas('H2', 'H').
+
+% Barcos de tres celdas
+barco_tres_celdas('D4', 'H').
+barco_tres_celdas('H6', 'V').
+
+% Barcos de cuatro celdas
+barco_cuatro_celdas('E6', 'V').
+
 % Reglas que dan las primer_haunting de las posiciones con alta probabilidad de tener un objetivo
 primer_haunting('A1').
 primer_haunting('A3').
