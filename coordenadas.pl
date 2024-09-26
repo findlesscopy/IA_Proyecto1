@@ -1,3 +1,4 @@
+% Reglas para la colocación de los barcos en el tablero
 % Barcos de una celda
 barco_una_celda('A1', 'H').
 barco_una_celda('B10', 'H').
@@ -14,7 +15,7 @@ barco_tres_celdas('D4', 'H').
 barco_tres_celdas('H6', 'V').
 
 % Barcos de cuatro celdas
-barco_cuatro_celdas('E6', 'V').
+barco_cuatro_celdas('F6', 'V').
 
 % Reglas que dan las primer_haunting de las posiciones con alta probabilidad de tener un objetivo
 primer_haunting('A1').
@@ -69,3 +70,5 @@ segundo_haunting('I4').
 segundo_haunting('I6').
 segundo_haunting('I8').
 segundo_haunting('I10').
+
+% Reglas que dan si el segundo_haunting se ha terminado
