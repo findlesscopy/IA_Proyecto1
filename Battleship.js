@@ -293,13 +293,6 @@ function clasificarBarcos() {
             barcosClasificados.cuatroCeldas.push({ posicion, ...barco });
         }
     });
-
-    // // Imprimir los barcos clasificados
-    // console.log("Barcos clasificados por tipo:");
-    // console.log("Barcos de una celda:", barcosClasificados.unoCelda);
-    // console.log("Barcos de dos celdas:", barcosClasificados.dosCeldas);
-    // console.log("Barcos de tres celdas:", barcosClasificados.tresCeldas);
-    // console.log("Barcos de cuatro celdas:", barcosClasificados.cuatroCeldas);
 }
 
 function empezandoJuego () {
@@ -338,6 +331,15 @@ function processNext(haunting) {
                             console.error("Error en segundo_haunting.");
                         }
                     });
+                } else if (haunting === 'segundo_haunting') {
+                    session.query("celdas_restantes(Nombre).", {
+                        success: function() {
+                            processNext('celdas_restantes');
+                        },
+                        fail: function() {
+                            console.error("Error en celdas_restantes.");
+                        }
+                    });
                 } else {
                     iniciar();
                 }
@@ -351,6 +353,15 @@ function processNext(haunting) {
                     },
                     fail: function() {
                         console.error("Error en segundo_haunting.");
+                    }
+                });
+            } else if (haunting === 'segundo_haunting') {
+                session.query("celdas_restantes(Nombre).", {
+                    success: function() {
+                        processNext('celdas_restantes');
+                    },
+                    fail: function() {
+                        console.error("Error en celdas_restantes.");
                     }
                 });
             } else {
@@ -456,7 +467,7 @@ function dispararACeldasAdyacentesPendientes() {
                 is_target = true;
             }
         }, 2000);
-    } else if (color === 'f2f4f8' || color === 'fafad6' || color === 'fef5f4' || color === 'c0c0c0' || color === 'ea3323') {
+    } else if (color === 'f2f4f8' || color === 'fafad6' || color === 'fef5f4' || color === 'c0c0c0' || color === 'ea3323' || color === '333333' || color === 'c8c8c9' || color === 'a7a8aa') {
         console.log(`Celda ${celda.nombre} no es disparable (fallo o ya disparada).`);
         dispararACeldasAdyacentesPendientes();
     }
