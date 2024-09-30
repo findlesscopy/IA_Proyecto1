@@ -42,7 +42,7 @@ async function ColocarBarcosFinal() {
     console.log("Iniciando ColocarBarcosFinal...");
     
     // Mueve el mouse a la posición del botón de reset
-    console.log("Esperando 3 segundos antes de mover el mouse...");
+    console.log("Esperando 3 segundos antes de empzar..");
     await esperarSegundos(3); 
     robot.moveMouse(610, 590);
     console.log("Mouse movido a la posición del botón de reset.");
@@ -78,7 +78,6 @@ function cargarPosiciones() {
                 posicionesMap[nombre] = { x, y };
             }
         });
-        // console.log("Posiciones cargadas:", posicionesMap);
         ColocarBarcosFinal();
     });
 }
@@ -100,7 +99,6 @@ function cargarPosicionesReset() {
                 posicionesReset[nombre] = { x, y };
             }
         });
-        // console.log("Posiciones cargadas:", posicionesReset);
         colocarBarcos(); // Inicia la colocación de barcos
     });
 }
@@ -128,16 +126,16 @@ async function moverBarco(origen, destino, orientacion) {
 
     // Verificar orientación
     if (orientacion === 'V') {
-        robot.moveMouse(destinoX, destinoY); // Mover el mouse para click de orientación
+        robot.moveMouse(destinoX, destinoY);
         await esperarSegundos(1);
-        robot.mouseClick();  // Cambiar la orientación a vertical
+        robot.mouseClick(); 
     }
 
     await esperarSegundos(1);
 }
 
 async function openBrowser() {
-    // Abre Chrome en la página del juego en Windows
+    // Abre Brave en la página del juego en el sistema
     exec('open -a "Brave Browser" http://en.battleship-game.org/');
 
     // Esperar 5 segungods antes de continuar
@@ -227,8 +225,6 @@ function procesarResultadosBarcos(predicado, callback) {
     session.answer({
         success: function(answer) {
             let result = pl.format_answer(answer);
-            
-            // console.log("Respuesta:", result);
 
             // Usar regex para extraer los valores
             let match = result.match(/X = (\w+), Orientacion = (\w+)/);
@@ -237,7 +233,7 @@ function procesarResultadosBarcos(predicado, callback) {
                 let orientacion = match[2];
 
                 // Imprime las coordenadas y orientaciones de los barcos
-                console.log(`Barco: ${nombre}, Orientación: ${orientacion}`);
+                // console.log(`Barco: ${nombre}, Orientación: ${orientacion}`);
 
                 // Almacena en el mapa las posiciones de cada barco según su tipo
                 posicionesReset[nombre] = { orientacion: orientacion };
@@ -245,12 +241,12 @@ function procesarResultadosBarcos(predicado, callback) {
                 // Busca la siguiente respuesta
                 procesarResultadosBarcos(predicado, callback); // Llama de nuevo para obtener la siguiente respuesta
             } else {
-                console.log(`No hay más respuestas para ${predicado}.`);
+                // console.log(`No hay más respuestas para ${predicado}.`);
                 callback(); // Llama al callback para continuar
             }
         },
         fail: function() {
-            console.log(`Error al obtener la respuesta para ${predicado}. Puede que no haya más.`);
+            // console.log(`Error al obtener la respuesta para ${predicado}. Puede que no haya más.`);
             callback(); // Llama al callback para continuar
         }
     });
@@ -272,19 +268,19 @@ function obtenerCoordenadasBarcos() {
             session.query(predicados[index], {
                 success: () => {
                     procesarResultadosBarcos(predicados[index], () => {
-                        index++; // Avanza al siguiente predicado
+                        index++; // Avanza al siguiente 
                         procesarSiguiente(); // Llama a la siguiente consulta
                     });
                 },
                 fail: () => {
                     console.error(`Error al consultar ${predicados[index]} en Prolog.`);
-                    index++; // Avanza al siguiente predicado, aunque falle
+                    index++; // Avanza al siguiente , aunque falle
                     procesarSiguiente(); // Llama a la siguiente consulta
                 }
             });
         } else {
             // Se han procesado todos los predicados
-            console.log("Coordenadas obtenidas:", posicionesReset);
+            // console.log("Coordenadas obtenidas:", posicionesReset);
             clasificarBarcos(); // Clasifica los barcos
             cargarPosicionesReset(); // Carga las posiciones de los barcos desde el archivo
         }
@@ -558,7 +554,5 @@ function detectarMensaje() {
     console.log(`Estado actual: ${estado}`);
     return estado;  
 }
-
-// cargarPosiciones();
 
 openBrowser();
