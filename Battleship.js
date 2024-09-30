@@ -1,6 +1,7 @@
 const robot = require('@hurdlegroup/robotjs');
 const notifier = require('node-notifier');
 const fs = require('fs');
+const { exec } = require('child_process');
 const pl = require('tau-prolog');
 require('tau-prolog/modules/js');
 
@@ -31,6 +32,10 @@ const barcosClasificados = {
     tresCeldas: [],
     cuatroCeldas: []
 };
+
+const coloresDisparable = ['ffffff', 'f7fcf6'];
+
+const coloresNoDisparables = ['f2f4f8', 'fafad6', 'fef5f4', 'c0c0c0', 'ea3323', '333333', 'c8c8c9', 'a7a8aa', 'dee0e2'];
 
 // Función principal async para colocar los barcos
 async function ColocarBarcosFinal() {
@@ -129,6 +134,16 @@ async function moverBarco(origen, destino, orientacion) {
     }
 
     await esperarSegundos(1);
+}
+
+async function openBrowser() {
+    // Abre Chrome en la página del juego en Windows
+    exec('open -a "Brave Browser" http://en.battleship-game.org/');
+
+    // Esperar 5 segungods antes de continuar
+    await esperarSegundos(5);
+
+    cargarPosiciones();
 }
 
 // Función para colocar todos los barcos siguiendo el flujo
@@ -453,10 +468,10 @@ function dispararACeldasAdyacentesPendientes() {
     let celda = pendientesAdyacentes.shift(); // Tomar la siguiente celda pendiente
     const color = obtenerColorDeCelda(celda.x, celda.y);
 
-    if (color === 'ffffff' || color === 'f7fcf6') {
+    if (coloresDisparable.includes(color)) {
         console.log(`Disparando a la celda adyacente: ${celda.nombre}`);
         moverYClick(celda);
-
+    
         // Si aciertas, incrementa el contador del barco
         setTimeout(() => {
             if (detectarMensaje() === "Ataque") {
@@ -467,7 +482,7 @@ function dispararACeldasAdyacentesPendientes() {
                 is_target = true;
             }
         }, 2000);
-    } else if (color === 'f2f4f8' || color === 'fafad6' || color === 'fef5f4' || color === 'c0c0c0' || color === 'ea3323' || color === '333333' || color === 'c8c8c9' || color === 'a7a8aa') {
+    } else if (coloresNoDisparables.includes(color)) {
         console.log(`Celda ${celda.nombre} no es disparable (fallo o ya disparada).`);
         dispararACeldasAdyacentesPendientes();
     }
@@ -517,15 +532,15 @@ function detectarMensaje() {
             sameColorPixels++;
         } else if (currentColor === '7f170e') {
             console.log("Se termina la ejecución, el jugador ha abandonado");
-            notifier.notify({ title: 'Notificación', message: 'El jugador ha abandonado. Se termina la ejecución.', sound: true });
+            notifier.notify({ title: 'Termina el juego obligatoriamiente', message: 'El jugador ha abandonado. Se termina la ejecución.', sound: true });
             process.exit(0);
         } else if (currentColor === 'ea3323') {
             console.log("Se termina la ejecución, has perdido.");
-            notifier.notify({ title: 'Notificación', message: 'Juego Finalizado. Has perdido.', sound: true });
+            notifier.notify({ title: '¡ Suerte para la próxima !', message: 'Juego Finalizado. Has perdido.', sound: true });
             process.exit(0);
         } else if (currentColor === '377e22') {
             console.log("Se termina la ejecución, has ganado.");
-            notifier.notify({ title: 'Notificación', message: 'Juego Finalizado. Has ganado.', sound: true });
+            notifier.notify({ title: '¡ Felicidades !', message: 'Juego Finalizado. Has ganado.', sound: true });
             process.exit(0);
         }
     }
@@ -544,4 +559,6 @@ function detectarMensaje() {
     return estado;  
 }
 
-cargarPosiciones();
+// cargarPosiciones();
+
+openBrowser();
